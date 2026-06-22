@@ -82,7 +82,7 @@ let vm = ViewModel()
 Task { await print(vm.items.count) }
 ```
 
-> 일반 `final class`는 `var`가 있으면 Sendable이 될 수 없지만(위 `Mutable` 예시), 격리가 걸린 클래스는 예외다. 보호 주체가 "불변성"에서 "격리"로 바뀐 것이다. → global actor 자세한 내용은 [Actor/README.md의 @MainActor](../Actor/README.md#mainactor) 참고
+> 일반 `final class`는 `var`가 있으면 Sendable이 될 수 없지만(위 `Mutable` 예시), 격리가 걸린 클래스는 예외다. 보호 주체가 "불변성"에서 "격리"로 바뀐 것이다. → global actor 자세한 내용은 [Actor.md의 @MainActor](./Actor.md#mainactor) 참고
 
 **내부 동기화를 직접 보장하는 클래스**: 락(`NSLock`, `DispatchQueue` 등)으로 가변 상태를 보호한다면 `@unchecked Sendable`로 직접 안전을 보장할 수 있다. → [@unchecked Sendable](#unchecked-sendable) 참고
 
@@ -230,6 +230,6 @@ func use(_ value: LegacyType) {
 
 ## 관련 문서
 
-- [sending](../sending.md) — non-Sendable 값을 경계 너머로 **이동(transfer)** 시키는 키워드. Sendable 요구를 완화하는 보완 개념이며, strict concurrency checking 모드(minimal/targeted/complete)와 region-based isolation도 여기서 다룬다.
-- [Actor/README.md](../Actor/README.md) — actor·`@MainActor`·global actor 격리. 격리가 어떻게 Sendable을 대체하는지의 배경.
+- [sending](./sending.md) — non-Sendable 값을 경계 너머로 **이동(transfer)** 시키는 키워드. Sendable 요구를 완화하는 보완 개념이며, strict concurrency checking 모드(minimal/targeted/complete)와 region-based isolation도 여기서 다룬다.
+- [Actor.md](./Actor.md) — actor·`@MainActor`·global actor 격리. 격리가 어떻게 Sendable을 대체하는지의 배경.
 
