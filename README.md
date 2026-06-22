@@ -1,9 +1,44 @@
 # dev-notes
 
-- [Swift](Swift)
-- [UIKit](UIKit)
-- [SwiftUI](SwiftUI)
-- [Objective-C](Objective-C)
-- [SoftwareDesign](SoftwareDesign)
-- [XcodeBuildSystem](XcodeBuildSystem)
+- Swift
+  - [GCD](Swift/GCD/README.md) — Grand Central Dispatch
+  - [Key-Value-Coding(KVC)](Swift/KVC.md)
+  - [Opaque Types(some)](Swift/OpaqueTypes.md)
+  - Combine
+    - [Publisher](Swift/Combine/Publisher.md)
+  - Concurrency
+    - [async/await](Swift/Concurrency/async_await.md)
+    - [Sendable](Swift/Concurrency/Sendable.md)
+    - [sending](Swift/Concurrency/sending.md)
+    - [AsyncSequence](Swift/Concurrency/AsyncSequence.md)
+    - [AsyncStream](Swift/Concurrency/AsyncStream.md)
+    - [Task](Swift/Concurrency/Task.md)
+    - [TaskGroup](Swift/Concurrency/TaskGroup.md)
+    - [Actor](Swift/Concurrency/Actor.md)
+    - [Testing](Swift/Concurrency/Testing.md)
+    - [Swift Concurrency: Behind the Scenes](Swift/Concurrency/Swift-Concurrency-Behind-the-Scenes.md)
+- UIKit
+  - [UIViewController & UIView LifeCycle](UIKit/UIViewControllerAndUIViewLifeCycle.md)
+- SwiftUI
+  - [Layout and Identity](SwiftUI/LayoutAndIdentity.md)
+  - [Custom Layouts](SwiftUI/CustomLayouts.md)
+  - [Animations and Transitions](SwiftUI/AnimationsAndTransitions.md)
+  - [Drawing and Effects](SwiftUI/DrawingAndEffects.md)
+  - [Environment and Preferences](SwiftUI/EnvironmentAndPreferences.md)
+  - [Performance](SwiftUI/Performance.md)
+- Objective-C
+  - [Flow Control](Objective-C/FlowControl.md) — 조건문, 반복문
+  - [Class](Objective-C/Class.md) — 클래스 선언, 구현, 멤버변수, 메서드
+  - [String](Objective-C/String.md) — 문자열, NSString, NSMutableString
+  - [Array](Objective-C/Array.md) — 배열, NSArray, NSMutableArray
+  - [Dictionary](Objective-C/Dictionary.md) — 딕셔너리, NSDictionary, NSMutableDictionary
+- SoftwareDesign
+  - [DDD](SoftwareDesign/DDD.md) — 도메인 주도 설계 정리 (6~15장)
+  - [OOP 4대 특징](SoftwareDesign/FourPillars.md) — 캡슐화, 상속, 다형성, 추상화
+  - [SOLID 원칙](SoftwareDesign/SOLID.md) — SRP, OCP, LSP, ISP, DIP
+- Xcode
+  - DependencyManager
+    - [CocoaPods](Xcode/DependencyManager/CocoaPods.md)
+    - [Carthage](Xcode/DependencyManager/Carthage.md)
+  - [모듈 링크 방식별 구성 실험](Xcode/ModuleCompositionExperiment/README.md) — 모듈을 Static/Dynamic Library·Framework로 구성 시 빌드 산출물 비교
 

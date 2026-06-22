@@ -1,3 +1,0 @@
-# UIKit
-
-- [LifeCycle](LifeCycle)

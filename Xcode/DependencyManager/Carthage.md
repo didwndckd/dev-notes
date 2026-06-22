@@ -59,15 +59,15 @@
 
 - **Link Binary With Libraries**
 
-  ![LinkBinaryWithLibraries](Assets/LinkBinaryWithLibraries.png)
+  ![LinkBinaryWithLibraries](assets/Carthage/LinkBinaryWithLibraries.png)
 
 - **New Run Script Phase**
 
-  ![NewRunScroptPhase](Assets/NewRunScroptPhase.png)
+  ![NewRunScroptPhase](assets/Carthage/NewRunScroptPhase.png)
 
 - **Run Script**
 
-  ![RunScript](Assets/RunScript.png)
+  ![RunScript](assets/Carthage/RunScript.png)
 
 - **Setting**
 

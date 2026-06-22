@@ -277,4 +277,180 @@ print(stringResult == intResult) // Error : Binary operator '==' cannot be appli
 
 - https://protocorn93.github.io/2019/12/12/Opaque-Types-in-Swift/
 
+
+
+## 심화
+
+> 아래 예제는 `protocol P {}`, `extension Int: P {}` 그리고 앞서 정의한 `Shape` / `Triangle` 등을 사용한다고 가정한다.
+
+### 재귀 반환
+
+불투명 타입을 반환하는 함수도 재귀 호출이 가능하다. 단, **모든 반환 분기가 동일한 구체 타입**을 반환해야 하고, **재귀가 아닌 구체 타입을 반환하는 분기가 최소 하나**는 있어야 한다. 그래야 컴파일러가 실제 반환 타입을 추론할 수 있다.
+
+``` swift
+func f7(_ i: Int) -> some P {
+    if i == 0 {
+        return f7(1)
+    } else if i < 0 {
+        let result = f7(-i)
+        return result
+    } else {
+        return 0 // 구체 타입(Int)을 반환하는 분기
+    }
+}
+```
+
+반면 자기 자신의 결과를 다시 감싸는 재귀는 불투명 타입을 자기 자신으로 정의하는 꼴이라 불가능하다.
+
+``` swift
+struct Wrapper<T: P>: P {
+    var value: T
+}
+
+func f8(_ i: Int) -> some P {
+//    return Wrapper(value: f8(i + 1)) // Error: Function opaque return type was inferred as 'Wrapper<some P>', which defines the opaque type in terms of itself
+    return Wrapper(value: f7(i))       // 다른 함수의 결과를 감싸는 것은 가능
+}
+```
+
+
+
+### fatalError와 Never
+
+불투명 타입을 반환하는 함수는 반드시 값을 반환해야 한다. 구체 타입을 반환하는 함수는 본문을 `fatalError()`(반환 타입 `Never`)로 대체할 수 있지만, 불투명 타입 함수는 `Never`가 해당 프로토콜을 채택하지 않는 한 불가능하다.
+
+``` swift
+func f9() -> some P {
+    return 1
+//    fatalError("not implemented") // Error: Return type ... requires that 'Never' conform to 'P'
+}
+
+func f9Int() -> Int {
+    fatalError("error") // 구체 타입 반환 함수는 가능
+}
+
+// Never에 프로토콜을 채택시키면 불투명 타입 함수에서도 fatalError 사용 가능
+extension Never: P {}
+func f9b() -> some P {
+    return fatalError("not implemented")
+}
+```
+
+
+
+### 프로퍼티와 서브스크립트
+
+불투명 타입은 함수 반환뿐 아니라 프로퍼티·서브스크립트·지역 변수의 타입으로도 쓸 수 있다.
+
+``` swift
+let strings: some Collection = ["hello", "world"]
+
+protocol GameObject {
+    associatedtype ObjectShape: Shape
+    var shape: ObjectShape { get }
+}
+
+struct Player: GameObject {
+    var shape: some Shape { // 프로퍼티에 some 사용
+        return Triangle(size: 1)
+    }
+}
+```
+
+
+
+### 연관 타입 추론
+
+불투명 타입 프로퍼티를 사용하면 프로토콜의 연관 타입이 자동으로 추론된다. 위 `Player`에서 `ObjectShape`는 `shape`의 실제 타입으로 추론된다.
+
+``` swift
+let pos: Player.ObjectShape
+pos = Player().shape       // Player.ObjectShape
+let pos2 = Player().shape  // some Shape
+```
+
+
+
+### 옵셔널 반환
+
+불투명 타입은 옵셔널로도 반환할 수 있다. 이때도 모든 반환 분기의 구체 타입은 같아야 한다.
+
+``` swift
+func f(flip: Bool) -> (some P)? {
+    if flip {
+        return 1
+    } else {
+        return 0 // 같은 Int 타입
+    }
+}
+```
+
+
+
+### 오버라이드 제약
+
+불투명 타입을 반환하는 메서드는 오버라이드할 수 없다. 부모 클래스와 동일한 타입을 반환하도록 강제되기 때문이다. (프로토콜 타입을 반환하는 메서드는 오버라이드 가능)
+
+``` swift
+class C {
+    func f() -> some P { return 0 }
+    func g() -> P { return "0" }
+}
+
+class D: C {
+//    override func f() -> some P { return 2 } // Error: Method does not override any method from its superclass
+    override func g() -> P { return 2 }         // OK
+}
+```
+
+또한 프로토콜 요구사항의 반환 타입으로는 `some`을 쓸 수 없다.
+
+``` swift
+protocol Q {
+//    func f() -> some P // Error: 'some' type cannot be the return type of a protocol requirement; did you mean to add an associated type?
+}
+```
+
+
+
+### 유일성(Uniqueness)
+
+같은 함수라도 호출 지점마다의 결과는 그 지점에 고정된 불투명 타입이라, 서로 다른 호출 결과끼리는 호환되지 않는다.
+
+``` swift
+func makeOpaque<T>(_ : T.Type) -> some Any {
+    return 1
+}
+
+var xx = makeOpaque(Int.self)
+//xx = makeOpaque(Double.self) // Error: Cannot assign value of type 'some Any' (result of 'makeOpaque') to type 'some Any' (result of 'makeOpaque')
+
+extension Array where Element: Comparable {
+    func opaqueSorted() -> some Sequence {
+        return self.sorted()
+    }
+}
+
+var xxx = [1, 2, 3].opaqueSorted()
+//xxx = ["a", "b", "c"].opaqueSorted() // Error: 원소 타입 불일치
+xxx = [3, 4, 5].opaqueSorted()         // OK (같은 Int 결과)
+```
+
+
+
+### 타입 제약과 합성
+
+`some` 뒤에 오는 타입은 클래스 또는 실존 타입(프로토콜, `Any`, `AnyObject`, 클래스)으로 제한되며 `&`로 합성할 수 있다.
+
+``` swift
+func makeMeACollection<T>(with: T) -> some RangeReplaceableCollection & MutableCollection {
+    return [with]
+}
+
+var c = makeMeACollection(with: 17)
+c.append(c.first!)         // RangeReplaceableCollection
+c[c.startIndex] = c.first! // MutableCollection
+print(c.reversed())        // Collection / Sequence
+```
+
   
