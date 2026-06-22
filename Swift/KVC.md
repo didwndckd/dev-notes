@@ -32,7 +32,7 @@
 
 - 타입 프로퍼티로 `rootType: Any.Type`, `valueType: Any.Type`이 있으나 접근하려 하면 메서드를 반드시 override 해야한다며 `Fatal Error` 발생
 
-  ![AnyKeyPath.rootValue](assets/AnyKeyPath.rootValue.png)
+  ![AnyKeyPath.rootValue](assets/KVC/AnyKeyPath.rootValue.png)
 
   - 유형이 지워진 키 경로라는 말이 이뜻인듯?
 
