@@ -386,7 +386,15 @@ actor BadExample {
 
 ## isolated 파라미터
 
-`isolated` 키워드를 사용하면 **외부 함수를 특정 actor에 격리**시킬 수 있다. 이를 통해 actor 내부처럼 `await` 없이 프로퍼티에 직접 접근 가능하다.
+`isolated` 키워드를 사용하면 **함수를 특정 actor 인스턴스의 격리 도메인에서 실행**시킬 수 있다. 이를 통해 actor 내부처럼 `await` 없이 프로퍼티에 직접 접근 가능하다.
+
+### 격리의 방향 — 함수가 인자 쪽으로 끌려 들어간다
+
+가장 헷갈리기 쉬운 부분이다. `isolated`는 **인자를 내 격리 안으로 데려오는 게 아니라, 함수가 그 인자(actor)의 격리 도메인 *안으로* 들어가는** 것이다.
+
+> **함수** → **인자(actor)의 격리 도메인**에서 실행됨
+
+그래서 호출하는 쪽에서는 그 인자의 도메인으로 hop이 일어나므로 `await`가 필요하고, 함수 본문 안에서는 그 인자가 이미 자기 도메인이므로 `await` 없이 직접 접근할 수 있다.
 
 ### 사용법
 
@@ -446,6 +454,43 @@ func isolatedLog(dataStore: isolated DataStore) {
     print(dataStore.friends)   // await 불필요
 }
 ```
+
+### actor 안에서 isolated 파라미터 받기
+
+actor의 일반 인스턴스 메서드는 기본적으로 `self`에 격리된다. 그런데 **메서드에 `isolated` 파라미터를 선언하면, 격리 대상이 `self` → 그 파라미터로 바뀐다.** `nonisolated`를 붙일 필요가 없으며(붙이면 오히려 에러), 그 안에서 `self`는 **nonisolated로 취급**된다.
+
+```swift
+actor DataStore {
+    var x = 0
+
+    // ✅ 그냥 컴파일됨. 이 메서드는 self가 아니라 other에 격리됨
+    func foo(other: isolated DataStore) {
+        other.x += 1   // ✅ other 도메인 → await 없이 직접 접근
+        // x += 1       // ❌ self는 nonisolated 취급 → 격리 상태 접근 불가
+    }
+}
+```
+
+주의할 점:
+
+- **`nonisolated`를 붙이면 에러다.** `isolated` 파라미터가 이미 격리를 지정하므로 중복/모순이다.
+  ```swift
+  // ❌ error: instance method with 'isolated' parameter cannot be 'nonisolated'
+  nonisolated func bar(other: isolated DataStore) {}
+  ```
+- **`isolated` 파라미터는 함수당 하나만** 가능하다. (explicit 파라미터를 선언하면 self의 암묵적 격리는 풀리므로, self와 충돌하는 게 아니라 explicit 파라미터가 2개일 때만 에러)
+  ```swift
+  // ❌ error: cannot have more than one 'isolated' parameter
+  func baz(a: isolated DataStore, b: isolated DataStore) {}
+  ```
+
+| 선언 | 무엇에 격리되나 | 메서드 안 `self` |
+|---|---|---|
+| 일반 인스턴스 메서드 | `self` | 격리됨 |
+| isolated 파라미터를 받는 메서드 | **그 파라미터** | nonisolated 취급 |
+| `nonisolated` 메서드 (isolated 파라미터 없음) | 아무 데도 안 됨 | nonisolated |
+
+> 즉 `isolated` 파라미터는 그 메서드의 **격리 대상을 self에서 파라미터로 옮기는** 스위치다. `static` 메서드나 actor 밖의 자유 함수(위 `debugLog(dataStore:)`)는 애초에 self 격리가 없어 동일하게 동작한다.
 
 ## nonisolated
 

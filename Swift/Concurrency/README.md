@@ -2,6 +2,7 @@
 
 - [async/await](./async_await/)
 - [Sendable](./Sendable/)
+- [sending](./sending.md)
 - [AsyncSequence](./AsyncSequence/)
 - [AsyncStream](./AsyncStream/)
 - [Task](./Task/)
