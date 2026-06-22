@@ -3,6 +3,7 @@
 - Swift
   - [GCD](Swift/GCD/README.md) — Grand Central Dispatch
   - [Key-Value-Coding(KVC)](Swift/KVC.md)
+  - [Opaque Types(some)](Swift/OpaqueTypes.md)
   - Combine
     - [Publisher](Swift/Combine/Publisher.md)
   - Concurrency
