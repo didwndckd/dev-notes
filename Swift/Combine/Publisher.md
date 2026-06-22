@@ -68,3 +68,163 @@ Future<Int, Never>() { promiss in
 
 
 
+## 커스텀 Publisher 구현 - CollectionJust
+
+- 배열을 받아 1초 간격으로 값을 하나씩 방출하는 커스텀 `Publisher`
+- `receive(subscriber:)`에서 `Subscription`을 생성해 `Subscriber`에게 전달하고, `Subscription`이 `Subscriber`의 `demand`에 맞춰 값을 방출함
+
+``` swift
+import Foundation
+import Combine
+
+struct CollectionJust<Output, Failure: Error>: Publisher {
+    
+    private let datas: [Output]
+    
+    init(datas: [Output]) {
+        self.datas = datas
+    }
+    
+    func receive<S>(subscriber: S) where S : Subscriber, Failure == S.Failure, Output == S.Input {
+        Swift.print(type(of: self), #function, "subscriber:", type(of: subscriber))
+        let subscription = InnerSubscription(subscriber: subscriber, datas: self.datas)
+        subscriber.receive(subscription: subscription)
+    }
+}
+
+extension CollectionJust {
+    final class InnerSubscription<S: Subscriber>: Combine.Subscription where Output == S.Input, Failure == S.Failure {
+        private let subscriber: S
+        private var datas: [Output]
+        private var demand: Subscribers.Demand = .unlimited
+        
+        init(subscriber: S, datas: [Output]) {
+            self.subscriber = subscriber
+            self.datas = datas
+        }
+        
+        deinit {
+            Swift.print("deinit -> \(type(of: self))")
+        }
+        
+        func request(_ demand: Subscribers.Demand) {
+            Swift.print(type(of: self), #function, "demand:", demand)
+            
+            self.demand = demand
+            
+            self.excuteData()
+        }
+        
+        func cancel() {
+            Swift.print(type(of: self), #function)
+            self.datas = []
+        }
+        
+        private func excuteData() {
+            Swift.print(type(of: self), #function, "datas: \(self.datas)")
+            
+            guard !self.datas.isEmpty, self.demand > .none else {
+                self.subscriber.receive(completion: .finished)
+                return
+            }
+            
+            let data = self.datas.removeFirst()
+            self.demand += self.subscriber.receive(data)
+            self.demand -= 1
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+                self.excuteData()
+            })
+        }
+    }
+}
+```
+
+- 사용 예시
+
+``` swift
+let publisher = CollectionJust<String, Never>(datas: ["A", "B", "C"])
+    .eraseToAnyPublisher()
+
+let cancellable = publisher
+    .sink(
+        receiveCompletion: { completion in
+            print("receiveCompletion: \(completion)")
+        },
+        receiveValue: { value in
+            print("receiveValue: \(value)")
+        })
+
+// receiveValue: A   (1초 간격)
+// receiveValue: B
+// receiveValue: C
+// receiveCompletion: finished
+```
+
+
+
+## 커스텀 Subscriber 구현 - CustomSubscriber
+
+- 구독, 값 수신, 완료 시점의 동작을 클로저로 주입받아 처리하는 커스텀 `Subscriber`
+- `receive(subscription:)`에서 구독을 받고, `receive(_:)`에서 값을 받아 다음 `Demand`를 반환하며, `receive(completion:)`에서 종료를 처리함
+
+``` swift
+import Foundation
+import Combine
+
+final class CustomSubscriber<Input, Failure: Error>: Subscriber {
+    
+    private var receiveSubscription: ((Subscription) -> Void)?
+    private var receiveInput: ((Input) -> Subscribers.Demand)?
+    private var receiveCompletion: ((Subscribers.Completion<Failure>) -> Void)?
+    
+    init(receiveSubscription: ((Subscription) -> Void)?,
+         receiveInput: ((Input) -> Subscribers.Demand)?,
+         receiveCompletion: ((Subscribers.Completion<Failure>) -> Void)?) {
+        self.receiveSubscription = receiveSubscription
+        self.receiveInput = receiveInput
+        self.receiveCompletion = receiveCompletion
+    }
+    
+    deinit {
+        print("deinit -> \(type(of: self))")
+    }
+    
+    func receive(subscription: Subscription) {
+        print(self, #function, "subscription: \(subscription)")
+        self.receiveSubscription?(subscription)
+    }
+    
+    func receive(_ input: Input) -> Subscribers.Demand {
+        print(self, #function, "input: \(input)")
+        return self.receiveInput?(input) ?? .none
+    }
+    
+    func receive(completion: Subscribers.Completion<Failure>) {
+        print(self, #function, "completion: \(completion)")
+        self.receiveCompletion?(completion)
+    }
+}
+```
+
+- 사용 예시
+  - `receiveSubscription`에서 원하는 `Demand`를 `request`로 요청해 backpressure를 직접 제어할 수 있음 (`.unlimited` 또는 `.max(n)`)
+
+``` swift
+let subscriber = CustomSubscriber<String, Never>(
+    receiveSubscription: { subscription in
+        // .max(n)으로 받을 개수를 제한하거나 .unlimited로 전부 받음
+        subscription.request(.unlimited)
+    },
+    receiveInput: { input in
+        print("receiveInput: \(input)")
+        return .none
+    },
+    receiveCompletion: { completion in
+        print("receiveCompletion: \(completion)")
+    })
+
+let publisher = CollectionJust<String, Never>(datas: ["A", "B", "C"])
+publisher.subscribe(subscriber)
+```
+
