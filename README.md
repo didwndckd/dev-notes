@@ -15,6 +15,7 @@
     - [Task](Swift/Concurrency/Task.md)
     - [TaskGroup](Swift/Concurrency/TaskGroup.md)
     - [Actor](Swift/Concurrency/Actor.md)
+    - [Executor](Swift/Concurrency/Executor.md)
     - [Testing](Swift/Concurrency/Testing.md)
     - [Swift Concurrency: Behind the Scenes](Swift/Concurrency/Swift-Concurrency-Behind-the-Scenes.md)
 - UIKit
