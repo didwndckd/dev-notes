@@ -119,8 +119,10 @@ final class DispatchQueueExecutor: SerialExecutor {
         UnownedSerialExecutor(ordinary: self)
     }
 
-    // SE-0424: assumeIsolated/assertIsolated가 "지금 이 executor 위인가"를 판별하는 훅.
-    // 구현하지 않으면 기본 구현이 무조건 크래시하므로, 커스텀 executor엔 사실상 필수.
+    // SE-0424: assumeIsolated/assertIsolated의 "지금 이 executor 위인가" 판별에서
+    // 런타임이 executor identity 비교(isCurrentExecutor)로 증명하지 못했을 때만
+    // 호출되는 last-resort 훅. 기본 구현은 fatalError라, identity 비교가 실패하는
+    // 경로(예: 큐에 직접 올린 동기 콜백)에서 assumeIsolated를 쓰려면 구현이 필요.
     func checkIsolated() {
         // 백킹 큐 위에서 실행 중인지 확인 → 아니면 즉시 크래시
         dispatchPrecondition(condition: .onQueue(queue))
@@ -270,10 +272,19 @@ extension MyActor {
 
 ### 커스텀 executor에서는 `checkIsolated()`가 필요 (SE-0424)
 
-위 API들은 런타임에 "지금 이 executor 위인가"를 판별해야 한다. 기본 executor는 런타임이 알아서 판별하지만, **커스텀 `SerialExecutor`** 의 경우 SE-0424(Swift 6.0)로 추가된 `func checkIsolated()`를 직접 구현해야 한다.
+위 API들은 런타임에 "지금 이 executor 위인가"를 판별해야 한다. 기본 executor는 런타임이 알아서 판별하지만, **커스텀 `SerialExecutor`** 의 경우 SE-0424(Swift 6.0)로 추가된 `func checkIsolated()`를 직접 구현할 수 있다.
 
-- 구현하지 않으면 기본 구현이 **무조건 크래시**하므로, 커스텀 executor에 묶인 actor에서 `assumeIsolated`를 호출하면 항상 실패한다.
-- 백킹이 `DispatchQueue`면 `dispatchPrecondition(condition: .onQueue(queue))`, 전용 스레드면 `Thread.current === thread` 같은 식으로 현재 실행 컨텍스트를 검증한다. (앞의 `DispatchQueueExecutor` / `ThreadExecutor` 예제 참고)
+**`checkIsolated()`는 "무조건" 불리는 게 아니라 last-resort다.** 런타임의 판별 순서는 대략 다음과 같다:
+
+```
+guard let current else { expected.checkIsolated() }    // ① 현재 executor를 아예 모를 때
+if isSameSerialExecutor(current, expected) { return }  // ② identity 비교 통과 → 여기서 끝(호출 안 됨)
+else { expected.checkIsolated() }                      // ③ 비교 실패 시에만 last-resort로 호출
+```
+
+- **actor의 task 안에서** `assumeIsolated`를 부르면 실제로 그 executor 위에서 job이 도는 중이라 ②에서 통과한다 → `checkIsolated()`가 **아예 호출되지 않으므로, 미구현이어도 크래시하지 않는다.** ("구현 안 하면 무조건 크래시"는 오해다.)
+- `checkIsolated()`가 실제로 필요한 건 **identity 비교가 실패하는(①/③) 경로**다. 런타임이 현재 executor를 모르거나 다른 것으로 인식하지만 실제로는 올바른 컨텍스트인 경우 — 대표적으로 백킹 `DispatchQueue`에 `async`로 직접 올린 **동기 델리게이트/C 콜백**에서 `assumeIsolated`를 호출할 때다. 이때 미구현이면 기본 구현(`fatalError`)이 그대로 크래시한다.
+- 그래서 백킹이 `DispatchQueue`면 `dispatchPrecondition(condition: .onQueue(queue))`, 전용 스레드면 `Thread.current === thread` 같은 식으로 현재 실행 컨텍스트를 검증하도록 구현한다. (앞의 `DispatchQueueExecutor` / `ThreadExecutor` 예제 참고)
 
 ## TaskExecutor (SE-0417)
 
