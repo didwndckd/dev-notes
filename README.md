@@ -39,6 +39,7 @@
   - [SOLID 원칙](SoftwareDesign/SOLID.md) — SRP, OCP, LSP, ISP, DIP
 - Python
   - [숫자형(Number)](Python/Numbers.md) — int, float, 진수 표현, 연산자
+  - [문자열(String)](Python/String.md) — 문자열 생성, 인덱싱/슬라이싱, 포매팅, 관련 함수
 - Xcode
   - DependencyManager
     - [CocoaPods](Xcode/DependencyManager/CocoaPods.md)
