@@ -44,6 +44,7 @@
   - [튜플(Tuple)](Python/Tuple.md) — 튜플 생성, 불변성, 인덱싱/슬라이싱, 연산
   - [딕셔너리(Dictionary)](Python/Dictionary.md) — Key:Value 쌍, 추가/삭제, 관련 함수
   - [집합(Set)](Python/Set.md) — 집합 생성, 중복 제거, 교집합/합집합/차집합, 관련 함수
+  - [불(Bool)](Python/Bool.md) — True/False, 자료형의 참과 거짓, 논리 연산자
 - Xcode
   - DependencyManager
     - [CocoaPods](Xcode/DependencyManager/CocoaPods.md)
