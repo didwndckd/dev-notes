@@ -45,6 +45,7 @@
   - [딕셔너리(Dictionary)](Python/Dictionary.md) — Key:Value 쌍, 추가/삭제, 관련 함수
   - [집합(Set)](Python/Set.md) — 집합 생성, 중복 제거, 교집합/합집합/차집합, 관련 함수
   - [불(Bool)](Python/Bool.md) — True/False, 자료형의 참과 거짓, 논리 연산자
+  - [변수(Variable)](Python/Variable.md) — 변수 선언, 명명 규칙, 객체와 참조, 리스트 복사
 - Xcode
   - DependencyManager
     - [CocoaPods](Xcode/DependencyManager/CocoaPods.md)
