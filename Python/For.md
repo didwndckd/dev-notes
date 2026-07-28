@@ -270,7 +270,7 @@ for name, score in zip(names, scores):
 >
 > ```python
 > names = ['홍길동', '김철수', '이영희', '양중창']  # 4개
-> scores = [85, 92, 78]                             # 3개
+> scores = [85, 92, 78]                      # 3개
 > print(list(zip(names, scores)))
 > # [('홍길동', 85), ('김철수', 92), ('이영희', 78)]  → '양중창'은 버려짐
 > ```
