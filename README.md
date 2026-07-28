@@ -47,6 +47,7 @@
   - [불(Bool)](Python/Bool.md) — True/False, 자료형의 참과 거짓, 논리 연산자
   - [변수(Variable)](Python/Variable.md) — 변수 선언, 명명 규칙, 객체 복사와 참조
   - [조건문(if)](Python/If.md) — if/elif/else, 들여쓰기, 조건부 표현식, match-case
+  - [반복문(while)](Python/While.md) — 기본 구조, break/continue, 무한 루프, while-else, 중첩
 - Xcode
   - DependencyManager
     - [CocoaPods](Xcode/DependencyManager/CocoaPods.md)
